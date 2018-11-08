@@ -1,0 +1,45 @@
+<?php
+	require_once('config/config.php');
+	require_once('config/functions.php');
+
+	if (isset($_COOKIE['hash'])) {
+		$sql = $db->query("SELECT * FROM `users` WHERE `hash` = " . $db->quote($_COOKIE['hash']));
+		if ($sql->rowCount() != 0) {
+			$row = $sql->fetch();
+			$user = $row;
+			setcookie('tradeurl', $user['tradeurl'], time() + 3600 * 24 * 7, '/');
+			$user['name'] =  str_replace("script"," ", strtolower($user['name']));
+
+			if(strlen($user['name']) > 15){
+				$user['name'] = substr($user['name'], 0, 15)."...";
+			}
+		} else{
+			setcookie("hash", "", time() - 3600, '/');
+			header('Location: /login');
+			exit();
+		}
+
+		if($user['ban'] == '1'){
+			echo "banned";
+			exit;
+		}
+	} else{
+		if (!isset($_GET['page'])) {
+			header('Location: /login');
+			exit();
+		}
+	}
+$url = 'http://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+
+
+if (strpos($url,'admin') !== false) {
+	if($user['admin'] == '1'){
+    include "admin/index.php";
+	}else{
+		echo "YOUR NOT ADMIN !";
+	}
+} else {
+    include "template/site.php";
+	include "template/modals.php";
+}
+	
